@@ -5,7 +5,7 @@ import xarray as xr
 import numpy as np
 from functools import lru_cache
 from data_sets import DATASETS
-
+import pandas as pd
 
 
 
@@ -187,59 +187,31 @@ async def query_timeseries(
         "colors":     ds_config["color_group1"] + ds_config["color_group2"],
     }
 
-#  shaded where have data
-@app.get("/query/{dataset_id}/grid")
+# Find which tanks are responsible for spill in a certain area
+@app.get("/query/{dataset_ID}/whichtanks")
 async def query_grid(
-    dataset_id: str,
-    downsample: int = Query(15),
-    check_rp:   str = Query('None'),
+    dataset_ID: str, 
+    lat:        float = Query(..., ge=-90, le=90),
+    lon:        float = Query(..., ge=-180, le=180),   
+    rad:        float = Query(0.001),
 ):
-    if dataset_id not in DATASETS:
-        raise HTTPException(404, "Dataset not found")
 
-    ds_config = DATASETS[dataset_id]
+    ## Sanitize input
+    if dataset_id not in ['s100yr']: raise HTTPException(503, "Data does not exist")
+    if _spill_cache is None: raise HTTPException(503, "Marker positions not loaded yet")
+    
+    df = _spill_cache[ _spill_cache.lon.apply(lambda x: np.abs(x-lon) < rad) &   
+                       _spill_cache.lat.apply(lambda y: np.abs(y-lat) < rad) ]
 
-    if ds_config["zarr_file"] is None:
-        raise HTTPException(503, "Data not available yet")
 
-    ds = open_zarr(ds_config["zarr_file"])
-
-    # topo 不參與判斷
-    if check_rp=="None":
-        check_vars = ["flood100","flood50","flood25",
-                      "surge100","surge50","surge25"]
-    elif check_rp=="25yr":
-        check_vars = ["flood25", "surge25"]
-    elif check_rp=="50yr":
-        check_vars = ["flood50", "surge50"]
-    elif check_rp=="100yr":
-        check_vars = ["flood100", "surge100"]
-
-    sample   = ds[check_vars[0]][::downsample, ::downsample]
-    lons     = [round(float(v), 4) for v in sample.lon.values]
-    lats     = [round(float(v), 4) for v in sample.lat.values]
-
-    has_data = np.zeros((len(lons), len(lats)), dtype=bool)
-
-    for var in check_vars:
-        data = ds[var][::downsample, ::downsample].values
-        valid    = ~np.isnan(data) & ~np.isinf(data) & (data > 0)
-        has_data = has_data | valid
-
-    result = []
-    for i in range(len(lons)):
-        row = []
-        for j in range(len(lats)):
-            row.append(bool(has_data[i, j]))
-        result.append(row)
 
     return {
-        "lons":     lons,
-        "lats":     lats,
-        "has_data": result,
+        "lons":     df.lon,
+        "lats":     df.lat,
+        "ast_ids":  df.ast_id
     }
 
-
+## NOTE: This function currently does nothing since tanks are currently only queried one-at-a-time by frontent. Revisit.
 # Fragility AST location
 @app.get("/fragility/points")
 async def get_fragility_points():
@@ -278,7 +250,7 @@ async def get_ast_detail(ast_id: int):
             "std":  pt["sv_std"],
         },
         "flood25":  pt["flood25"],
-        "flood50":  pt["flood50"],
+        "flood50": i pt["flood50"],
         "flood100": pt["flood100"],
         "surge25":  pt["surge25"],
         "surge50":  pt["surge50"],
@@ -292,7 +264,6 @@ async def get_ast_detail(ast_id: int):
 
 # default ast
 _ast_points_cache = None
-
 def build_ast_cache():
     global _ast_points_cache
     try:
@@ -360,5 +331,17 @@ def build_ast_cache():
     except Exception as e:
         print(f"⚠ AST cache failed: {e}")
 
+_spill_cache = None
+async def build_spill_cache()
+    global _spill_cache
+    try:
+        _spill_cache =  pd.read_csv('spill100_marker_positions_final_9storms.csv')
+        print("Loaded marker points")
+    except Exception as e:
+        print(f"failed to load marker positions")
+
+
+
 # starting
 build_ast_cache()
+build_spill_cache()
