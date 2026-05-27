@@ -332,7 +332,7 @@ def build_ast_cache():
         print(f"⚠ AST cache failed: {e}")
 
 _spill_cache = None
-async def build_spill_cache()
+async def build_spill_cache():
     global _spill_cache
     try:
         _spill_cache =  pd.read_csv('data/spill100_marker_positions_final_9storms.csv')
