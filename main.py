@@ -335,7 +335,7 @@ _spill_cache = None
 async def build_spill_cache()
     global _spill_cache
     try:
-        _spill_cache =  pd.read_csv('spill100_marker_positions_final_9storms.csv')
+        _spill_cache =  pd.read_csv('data/spill100_marker_positions_final_9storms.csv')
         print("Loaded marker points")
     except Exception as e:
         print(f"failed to load marker positions")

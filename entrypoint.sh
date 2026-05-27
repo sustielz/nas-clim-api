@@ -24,6 +24,10 @@ if [ ! -d "data/fragility_1942.zarr" ]; then
     rm fragility_1942.tar.gz
 fi
 
+if [ ! -d "data/spill100_marker_positions_final_9storms.csv" ]; then
+    cp spill100_marker_positions_final_9storms.csv data/
+fi
+
 # check and start 
 echo "==> Starting API..."
 ls -la data/
