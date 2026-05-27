@@ -188,9 +188,9 @@ async def query_timeseries(
     }
 
 # Find which tanks are responsible for spill in a certain area
-@app.get("/query/{dataset_ID}/whichtanks")
+@app.get("/query/{dataset_id}/whichtanks")
 async def query_grid(
-    dataset_ID: str, 
+    dataset_id: str, 
     lat:        float = Query(..., ge=-90, le=90),
     lon:        float = Query(..., ge=-180, le=180),   
     rad:        float = Query(0.001),
