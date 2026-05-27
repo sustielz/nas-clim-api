@@ -199,17 +199,22 @@ async def query_grid(
     ## Sanitize input
     if dataset_id not in ['s100yr']: raise HTTPException(503, "Data does not exist")
     if _spill_cache is None: raise HTTPException(503, "Marker positions not loaded yet")
-    
+
+    print('QUERYING SPILL CACHE')
     df = _spill_cache[ _spill_cache.lon.apply(lambda x: np.abs(x-lon) < rad) &   
                        _spill_cache.lat.apply(lambda y: np.abs(y-lat) < rad) ]
+    print(df)
+    print(df.ast_id)
 
 
 
-    return {
-        "lons":     df.lon,
-        "lats":     df.lat,
-        "ast_ids":  df.ast_id
-    }
+    return {'ids': [int(i) for i in df.ast_id if not np.isnan(i)]}
+#    return {
+#        "lons":     df.lon,
+#        "lats":     df.lat,
+#        "ast_ids":  df.ast_id
+#    }
+
 
 ## NOTE: This function currently does nothing since tanks are currently only queried one-at-a-time by frontent. Revisit.
 # Fragility AST location
