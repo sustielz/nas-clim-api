@@ -250,7 +250,7 @@ async def get_ast_detail(ast_id: int):
             "std":  pt["sv_std"],
         },
         "flood25":  pt["flood25"],
-        "flood50": i pt["flood50"],
+        "flood50":  pt["flood50"],
         "flood100": pt["flood100"],
         "surge25":  pt["surge25"],
         "surge50":  pt["surge50"],
