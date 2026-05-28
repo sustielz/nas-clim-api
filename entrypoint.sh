@@ -28,6 +28,10 @@ if [ ! -d "data/spill100_marker_positions_final_9storms.csv" ]; then
     cp spill100_marker_positions_final_9storms.csv data/
 fi
 
+if [ ! -d "data/100yrfragility.pkl" ]; then
+    cp 100yrfragility.pkl data/
+fi
+
 # check and start 
 echo "==> Starting API..."
 ls -la data/

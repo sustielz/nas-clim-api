@@ -10,6 +10,7 @@ COPY return_water_levels.tar.gz ./
 COPY return_tank_levels.tar.gz ./
 COPY fragility_1942.tar.gz ./
 COPY spill100_marker_positions_final_9storms.csv ./
+COPY 100yrfragility.pkl ./
 
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
