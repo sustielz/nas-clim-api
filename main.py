@@ -272,25 +272,21 @@ _ast_points_cache = None
 def build_ast_cache():
     global _ast_points_cache
     try:
-        ds1 = open_zarr("fragility_1942")
-        ds2 = open_zarr("return_tank_levels")
-        ds2 = ds2.rename_dims({"OBJECTID":"AST_ID"})
-        ds2 = ds2.rename({"OBJECTID":"AST_ID"})
-        ds = ds1.merge(ds2, fill_value=0.0)
+        ds1 = pd.read_pickle("data/100yr_fragility.pkl")
+        ds2 = open_zarr("return_tank_levels").to_dataframe()
+        ds = pd.merge(ds1, ds2)
         
         lats    = ds.Latitude.values
         lons    = ds.Longitude.values
-        ids     = ds.AST_ID.values
+        ids     = ds.index.values
         types   = ds.Type.values
         heights = ds.Height.values
 
-        pf_all  = ds.Pf_System_.values    # (5979, 1000)
-        sv_all  = ds.Spill_Volume_.values # (5979, 1000)
 
-        pf_mean = np.mean(pf_all, axis=1)
-        pf_std  = np.std(pf_all,  axis=1)
-        sv_mean = np.mean(sv_all, axis=1)
-        sv_std  = np.std(sv_all,  axis=1)
+        pf_mean = ds.mean_fail_prob.values 
+        pf_std  = ds.std_fail_prob.values
+        sv_mean = ds.mean_expected_vol.values
+        sv_std  = ds.std_expected_vol.values 
 
         flood25 = ds.flood25 .values
         flood50 = ds.flood50 .values
@@ -315,10 +311,10 @@ def build_ast_cache():
                 "lon":     round(float(lons[i]), 6),
                 "type":    str(types[i]),
                 "height":  round(float(heights[i]), 2),
-                "pf_mean": round(float(pf_mean[i]), 6),
-                "pf_std":  round(float(pf_std[i]),  6),
-                "sv_mean": round(float(sv_mean[i]), 4),
-                "sv_std":  round(float(sv_std[i]),  4),
+                "pf_mean": [round(float(val), 6) for val in pf_mean[i]],
+                "pf_std":  [round(float(val), 6) for val in pf_std[i]],
+                "sv_mean": [round(float(val), 4) for val in sv_mean[i]],
+                "sv_std":  [round(float(val), 4) for val in sv_std[i]],
                 "flood25":   round(float(flood25 [i]),  4),
                 "flood50":   round(float(flood50 [i]),  4),
                 "flood100":  round(float(flood100[i]),  4),
@@ -341,7 +337,7 @@ def build_spill_cache():
     global _spill_cache
     try:
         _spill_cache =  pd.read_csv('data/spill100_marker_positions_final_9storms.csv')
-        print("Loaded marker points")
+        print("Loaded marker points"):
     except Exception as e:
         print(f"failed to load marker positions")
 
